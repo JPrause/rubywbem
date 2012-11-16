@@ -82,7 +82,7 @@ module WBEM
             end
             h.use_ssl = true
 			h.verify_mode = OpenSSL::SSL::VERIFY_NONE
-			h.read_timeout = 240
+			h.read_timeout = 960
             # key_file, cert_file ???
         end    
         data = "<?xml version='1.0' encoding='utf-8' ?>\n" + data
