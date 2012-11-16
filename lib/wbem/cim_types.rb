@@ -186,7 +186,7 @@ module WBEM
         elsif (obj.is_a?(TimeDelta))
             return sprintf("%08d%02d%02d%02d.%06d:000",
                            obj.days, obj.hours, obj.minutes, obj.seconds, obj.microseconds)
-        elsif (obj.methods.include?("tocimxml"))
+        elsif (obj.respond_to?("tocimxml"))
             return obj.tocimxml
         elsif obj.nil?
             return obj

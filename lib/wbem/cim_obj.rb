@@ -152,7 +152,7 @@ module WBEM
                 name1.downcase <=> name2.downcase
             elsif (name2.is_a?(Boolean))
                 (name2 <=> name1)*-1
-            elsif (!name1.methods.include?("<=>"))
+            elsif (!name1.respond_to?("<=>"))
                 (name1 == name2) ? 0 : 1
             elsif ((name1.nil? || name1 == false) && 
                    (name2.nil? || name2 == false))
@@ -594,7 +594,7 @@ module WBEM
                 self.keybindings.to_a.each do |kb|
                     # Keybindings can be integers, booleans, strings or
                     # value references.                
-                    if (kb[1].methods.include?("tocimxml"))
+                    if (kb[1].respond_to?("tocimxml"))
                         kbs << KEYBINDING.new(doc, kb[0], VALUE_REFERENCE.new(doc, kb[1].tocimxml(doc)))
                         next
                     end
@@ -1047,7 +1047,7 @@ module WBEM
                                     value.is_a?(CIMClassName) or 
                                     value.is_a?(CIMLocalClassPath)))
             return VALUE_REFERENCE.new(doc, WBEM.atomic_to_cim_xml(value))
-        elsif (value.methods.include?("tocimxml"))
+        elsif (value.respond_to?("tocimxml"))
             return value.tocimxml(doc)
         elsif (value.is_a?(Array))
             if (wrap_references and (value[0].is_a?(CIMInstanceName) or  
