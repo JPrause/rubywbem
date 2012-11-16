@@ -112,8 +112,7 @@ module WBEM
 
         def toxml
             #"""Return the XML string representation of ourselves."""
-            ret = ""
-            self.tocimxml().write(ret)
+            ret = self.to_s
             return ret
         end
         def hash
@@ -530,7 +529,8 @@ module WBEM
             end
             s += '%s.' % self.classname
 
-            self.keybindings.to_a.each do |key, value|
+			# Sort by key so we can easily compare string representations of the instance name.
+            self.keybindings.sort.each do |key, value|
                 
                 s += "#{key}="
                 
@@ -1111,13 +1111,14 @@ module WBEM
                 return nil
             end
             tv_pattern = /^(\d{8})(\d{2})(\d{2})(\d{2})\.(\d{6})(:)(\d{3})/
-            date_pattern = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.(\d{6})([+|-])(\d{3})/
+            date_pattern = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.(\d{6})([+|-]\d{3})/
             s = tv_pattern.match(value)
             if (s.nil?)
-		if ((s = date_pattern.match(value)).nil?)
+				if ((s = date_pattern.match(value)).nil?)
                     raise TypeError, "Invalid Datetime format #{value}"
                 end
-                return DateTime.new(s[1].to_i,s[2].to_i,s[3].to_i,s[4].to_i,s[5].to_i,s[6].to_i+Rational(s[7].to_i,1000000))
+				return Time.gm(s[1].to_i,s[2].to_i,s[3].to_i,s[4].to_i,s[5].to_i,s[6].to_i,s[7].to_i) if s[8].to_i == 0
+				return Time.local(s[1].to_i,s[2].to_i,s[3].to_i,s[4].to_i,s[5].to_i,s[6].to_i,s[7].to_i)
             else
                 # returning a rational num for the #days rather than a python timedelta
                 return TimeDelta.new(s[1].to_i, s[2].to_i, s[3].to_i, s[4].to_i, s[5].to_i)
@@ -1144,5 +1145,9 @@ module WBEM
             @seconds = seconds
             @microseconds = microseconds
         end
+		def to_s
+			"D:#{@days}, H:#{@hours}, M:#{@minutes}, S:#{@seconds}, mS:#{@microseconds}"
+		end
     end
+
 end

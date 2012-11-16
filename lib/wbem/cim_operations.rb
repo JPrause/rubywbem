@@ -14,7 +14,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-require "rexml/document"
+require "rubygems"
+require "libxml"
 require "wbem/cim_obj"
 require "wbem/cim_xml"
 require "wbem/cim_http"
@@ -75,7 +76,8 @@ module WBEM
         #unpacked.
         #"""
     
-        attr_reader :url, :creds, :x509, :last_request, :last_raw_request, :last_reply, :default_namespace
+        attr_reader :url, :creds, :x509, :last_request, :last_raw_request, :last_reply
+		attr_accessor :default_namespace
         def initialize(url, creds = nil, default_namespace = DEFAULT_NAMESPACE,
                        x509 = nil)
             @url = url
@@ -130,10 +132,8 @@ module WBEM
                                           '1001', '1.0'),
                               '2.0', '2.0')
             
-            @last_raw_request = ""
-            @last_request = ""
-            req_xml.write(@last_raw_request)
-            req_xml.write(@last_request, 2)
+            @last_raw_request = req_xml.to_s
+            @last_request = req_xml.to_s
             # Get XML response
 
             begin
@@ -148,14 +148,12 @@ module WBEM
             ## TODO: Perhaps only compute this if it's required?  Should not be
             ## all that expensive.
             
-            reply_dom = REXML::Document.new(resp_xml)
+            reply_dom = LibXML::XML::Document.string(resp_xml)
 
             ## We want to not insert any newline characters, because
             ## they're already present and we don't want them duplicated.
-            @last_reply = ""
-            @last_raw_reply = ""
-            reply_dom.write(@last_reply, 2)
-            reply_dom.write(@last_raw_reply)
+			@last_reply = reply_dom.to_s
+			@last_raw_reply = reply_dom.to_s
 #            STDOUT << "response: #{@last_reply}\n"
 
             # Parse response
@@ -202,6 +200,7 @@ module WBEM
                 if tt[1].has_key?("DESCRIPTION")
                     raise CIMError.new(code), tt[1]["DESCRIPTION"]
                 end
+
                 raise CIMError.new(code), "Error code #{tt[1]['CODE']}"
                 
                 if (tt[0] != "IRETURNVALUE")

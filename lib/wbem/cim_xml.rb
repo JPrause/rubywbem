@@ -43,11 +43,12 @@
 #
 #"""
 
-require "rexml/document"
+require "rubygems"
+require "libxml"
 
 module WBEM
 
-    class CIMElement < REXML::Element
+    class CIMElement <  LibXML::XML::Node
             #"""A base class that has a few bonus helper methods."""
 
         def initialize(arg)
@@ -56,25 +57,37 @@ module WBEM
 
         def setName(name)
             #"""Set the NAME attribute of the element."""
-            self.add_attribute("NAME", name)
+			self["NAME"] = name
         end
 
+		def add_text(text)
+			self.content = text
+		end
+
         def add_optional_attribute(name, value)
-            #"""Set an attribute if the value is not nil."""        
-            self.add_attribute(name, value) unless value.nil?
+            #"""Set an attribute if the value is not nil."""
+ 			self[name] = value unless value.nil?
         end
+
+		def add_attribute(name, value)
+			self[name] = value
+		end
 
         def add_optional_element(child)
             #"""Append a child element which can be nil."""
-            self.add_element(child) unless child.nil?
+            self << child unless child.nil?
         end
+
+		def add_element(child)
+			self << child
+		end
 
         def add_elements(children)
             #"""Append a list or tuple of children."""
             unless children.is_a?(Array) or children.is_a?(Hash)
                 children = [children]
             end
-            children.each { |child| self.add_element(child) }
+            children.each { |child| self << child }
         end
         def toxml()
             outstr = ""

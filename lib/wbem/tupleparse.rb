@@ -140,16 +140,12 @@ module WBEM
 
         required_attrs.each do |attr|
             unless tt_attrs.has_key?(attr)
-                raise ParseError, "expected #{attr} attribute on #{WBEM.name(tt)} node, but only have #{WBEM.attrs(tt).keys()}"
+                raise ParseError, "expected #{attr} attribute on #{WBEM.name(tt)} node, but only have #{WBEM.attrs(tt).keys().inspect}"
             end
             tt_attrs.delete(attr)
         end
 
         optional_attrs.each { |attr| tt_attrs.delete(attr) }
-
-        unless tt_attrs.empty?
-            raise ParseError, "invalid extra attributes #{tt_attrs.keys()}"
-        end
 
         unless allowed_children.nil?
             WBEM.kids(tt).each do |c|
@@ -239,7 +235,7 @@ module WBEM
 #     must all be the same.
 #     """
 
-        unless (k = WBEM.kids(tt))
+        unless (k = WBEM.kids(tt)) && k.length > 0
             return [] # empty list, consistent with list_of_various
         end
     
@@ -275,7 +271,7 @@ module WBEM
         WBEM.check_node(tt, "CIM", ["CIMVERSION", "DTDVERSION"])
     
         unless WBEM.attrs(tt)["CIMVERSION"] == "2.0"
-            raise ParseError, "CIMVERSION is #{WBEM.attrs(tt)[CIMVERSION]}, expected 2.0"
+            raise ParseError, "CIMVERSION is #{WBEM.attrs(tt)['CIMVERSION']}, expected 2.0"
         end
         child = WBEM.one_child(tt, ["MESSAGE", "DECLARATION"])
         return [WBEM.name(tt), WBEM.attrs(tt), child]

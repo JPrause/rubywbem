@@ -81,6 +81,7 @@ module WBEM
                 key_file = nil
             end
             h.use_ssl = true
+			h.verify_mode = OpenSSL::SSL::VERIFY_NONE
             # key_file, cert_file ???
         end    
         data = "<?xml version='1.0' encoding='utf-8' ?>\n" + data

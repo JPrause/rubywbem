@@ -43,7 +43,7 @@
 # The fourth element is reserved.
 # """
 
-require "rexml/document"
+require "nokogiri"
 
 module WBEM
 
@@ -74,12 +74,11 @@ module WBEM
 
 #     Very nice for processing complex nested trees.
 #     """
-
-        if node.node_type == :document
+        if node.node_type == LibXML::XML::Node::DOCUMENT_NODE
             # boring; pop down one level
-            return dom_to_tupletree(node.elements[1])
+            return dom_to_tupletree(node.child)
         end
-        unless node.node_type == :element
+        unless node.node_type == LibXML::XML::Node::ELEMENT_NODE
             raise TypeError, "node must be an element"
         end
         
@@ -87,30 +86,20 @@ module WBEM
         attrs = {}
         contents = []
 
-        node.elements.each do |child|
-            if child.node_type == :element
+        node.children.each do |child|
+            if child.node_type == LibXML::XML::Node::ELEMENT_NODE
                 contents << dom_to_tupletree(child)
-            elsif child.node_type == :text
-                unless child.value.kind_of?(String)
+            elsif child.node_type == LibXML::XML::Node::TEXT_NODE
+                unless child.content.kind_of?(String)
                     raise TypeError, "text node #{child} must be a string"
                 end
-                contents << child.value
-            else
-                raise RuntimeError, "can't handle #{child}"
-            end
-        end
-        node.texts.each do |child|
-            if child.node_type == :text
-                unless child.value.kind_of?(String)
-                    raise TypeError, "text node #{child} must be a string"
-                end
-                contents << child.value
+                contents << child.content
             else
                 raise RuntimeError, "can't handle #{child}"
             end
         end
 
-        node.attributes.each { |nodename, nodevalue| attrs[nodename] = nodevalue }
+        node.attributes.each { |a| attrs[a.name] = a.value }
 
         # XXX: Cannot yet handle comments, cdata, processing instructions and
         # other XML batshit.
@@ -121,7 +110,7 @@ module WBEM
 
     def WBEM.xml_to_tupletree(xml_string)
 #    """Parse XML straight into tupletree."""
-        return dom_to_tupletree(REXML::Document.new(xml_string))
+        return dom_to_tupletree(LibXML::XML::Document.string(xml_string))
     end
 
     def WBEM.tupletree_to_s(tt)
