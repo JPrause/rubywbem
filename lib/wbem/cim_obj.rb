@@ -390,7 +390,7 @@ module WBEM
 
             if type.nil?
                 if (value.nil?)
-                    raise TypeError, "value argument must not be nil if type is missing"
+					@prop_type = WBEM.cimtype(value)
                 end
                 if (value.is_a?(Array))
                     if (value.empty?)
