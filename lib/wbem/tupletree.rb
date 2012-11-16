@@ -74,11 +74,11 @@ module WBEM
 
 #     Very nice for processing complex nested trees.
 #     """
-        if node.node_type == LibXML::XML::Node::DOCUMENT_NODE
+        if node.node_type == Nokogiri::XML::Node::DOCUMENT_NODE
             # boring; pop down one level
             return dom_to_tupletree(node.child)
         end
-        unless node.node_type == LibXML::XML::Node::ELEMENT_NODE
+        unless node.node_type == Nokogiri::XML::Node::ELEMENT_NODE
             raise TypeError, "node must be an element"
         end
         
@@ -87,9 +87,9 @@ module WBEM
         contents = []
 
         node.children.each do |child|
-            if child.node_type == LibXML::XML::Node::ELEMENT_NODE
+            if child.node_type == Nokogiri::XML::Node::ELEMENT_NODE
                 contents << dom_to_tupletree(child)
-            elsif child.node_type == LibXML::XML::Node::TEXT_NODE
+            elsif child.node_type == Nokogiri::XML::Node::TEXT_NODE
                 unless child.content.kind_of?(String)
                     raise TypeError, "text node #{child} must be a string"
                 end
@@ -99,7 +99,7 @@ module WBEM
             end
         end
 
-        node.attributes.each { |a| attrs[a.name] = a.value }
+        node.attribute_nodes.each { |a| attrs[a.name] = a.value }
 
         # XXX: Cannot yet handle comments, cdata, processing instructions and
         # other XML batshit.
@@ -110,7 +110,7 @@ module WBEM
 
     def WBEM.xml_to_tupletree(xml_string)
 #    """Parse XML straight into tupletree."""
-        return dom_to_tupletree(LibXML::XML::Document.string(xml_string))
+        return dom_to_tupletree(Nokogiri::XML::Document.parse(xml_string))
     end
 
     def WBEM.tupletree_to_s(tt)

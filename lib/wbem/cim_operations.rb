@@ -15,7 +15,6 @@
 #
 
 require "rubygems"
-require "libxml"
 require "wbem/cim_obj"
 require "wbem/cim_xml"
 require "wbem/cim_http"
@@ -116,16 +115,18 @@ module WBEM
                        "CIMMethod: #{methodname}",
                        WBEM.get_object_header(localnamespacepath)]
 
+			req_doc = CIMDOC.new
+
             # Create parameter list
             plist = params.to_a.collect do |x|
-                IPARAMVALUE.new(x[0].to_s, WBEM.tocimxml(x[1]))
+                IPARAMVALUE.new(req_doc, x[0].to_s, WBEM.tocimxml(req_doc, x[1]))
             end
         
             # Build XML request
             
-            req_xml = CIM.new(MESSAGE.new(SIMPLEREQ.new(IMETHODCALL.new(methodname,
-                                                                        LOCALNAMESPACEPATH.new(localnamespacepath.split("/").collect do |ns| 
-                                                                                                   NAMESPACE.new(ns) 
+            req_xml = CIM.new(req_doc, MESSAGE.new(req_doc, SIMPLEREQ.new(req_doc, IMETHODCALL.new(req_doc, methodname,
+                                                                        LOCALNAMESPACEPATH.new(req_doc, localnamespacepath.split("/").collect do |ns| 
+                                                                                                   NAMESPACE.new(req_doc, ns) 
                                                                                                end
                                                                                                ),
                                                                         plist)),
@@ -148,7 +149,7 @@ module WBEM
             ## TODO: Perhaps only compute this if it's required?  Should not be
             ## all that expensive.
             
-            reply_dom = LibXML::XML::Document.string(resp_xml)
+            reply_dom = Nokogiri::XML::Document.parse(resp_xml)
 
             ## We want to not insert any newline characters, because
             ## they're already present and we don't want them duplicated.
@@ -209,7 +210,8 @@ module WBEM
             end
             return tt
         end
-            
+        
+		# TODO: still needs to be changed for Nokogiri.
         def methodcall(methodname, localobject, params)
             #"""Make an extrinsic method call.
             

@@ -212,21 +212,21 @@ module WBEM
             @instancename = instancename
         end
 
-        def HOST
-            HOST.new(@host)
+        def HOST(doc)
+            HOST.new(doc, @host)
         end
 
-        def CLASSNAME
-            CLASSNAME.new(@classname)
+        def CLASSNAME(doc)
+            CLASSNAME.new(doc, @classname)
         end
 
-        def LOCALNAMESPACEPATH
+        def LOCALNAMESPACEPATH(doc)
             nsArray = @localnamespacepath.split("/").collect { |name| NAMESPACE.new(name) }
-            LOCALNAMESPACEPATH.new(nsArray)
+            LOCALNAMESPACEPATH.new(doc, nsArray)
         end
 
-        def NAMESPACEPATH
-            NAMESPACEPATH.new(self.HOST, self.LOCALNAMESPACEPATH)
+        def NAMESPACEPATH(doc)
+            NAMESPACEPATH.new(doc, self.HOST(doc), self.LOCALNAMESPACEPATH(doc))
         end
 
         def eql?(other)
@@ -262,8 +262,8 @@ module WBEM
             self.classname=classname
         end
 
-        def tocimxml
-            self.CLASSNAME
+        def tocimxml(doc)
+            self.CLASSNAME(doc)
         end
         
         def to_s
@@ -286,7 +286,7 @@ module WBEM
             self.localnamespacepath=localnamespacepath
         end
 
-        def tocimxml
+        def tocimxml(doc)
             self.NAMESPACEPATH
         end
         
@@ -309,7 +309,7 @@ module WBEM
             self.localnamespacepath=localnamespacepath
         end
 
-        def tocimxml
+        def tocimxml(doc)
             LOCALCLASSPATH.new(self.LOCALNAMESPACEPATH, self.CLASSNAME)
         end
         
@@ -336,7 +336,7 @@ module WBEM
             self.localnamespacepath=localnamespacepath
         end
 
-        def tocimxml
+        def tocimxml(doc)
             CLASSPATH.new(self.NAMESPACEPATH, self.CLASSNAME)
         end
         
@@ -452,29 +452,29 @@ module WBEM
             ret_val
         end
 
-        def tocimxml
+        def tocimxml(doc)
             if self.is_array
-                return PROPERTY_ARRAY.new(self.name,
+                return PROPERTY_ARRAY.new(doc, self.name,
                                           self.prop_type,
-                                          WBEM.tocimxml(self.value),
+                                          WBEM.tocimxml(doc, self.value),
                                           self.array_size,
                                           self.class_origin,
                                           self.propagated,
-                                          self.qualifiers.values.collect { |q| q.tocimxml})
+                                          self.qualifiers.values.collect { |q| q.tocimxml(doc)})
             elsif self.prop_type == 'reference'
-                return PROPERTY_REFERENCE.new(self.name,
-                                              WBEM.tocimxml(self.value, true),
+                return PROPERTY_REFERENCE.new(doc, self.name,
+                                              WBEM.tocimxml(doc, self.value, true),
                                               self.reference_class,
                                               self.class_origin,
                                               self.propagated,
-                                              self.qualifiers.values.collect { |q| q.tocimxml})
+                                              self.qualifiers.values.collect { |q| q.tocimxml(doc)})
             else
-                return PROPERTY.new(self.name,
+                return PROPERTY.new(doc, self.name,
                                     self.prop_type,
-                                    WBEM.tocimxml(self.value),
+                                    WBEM.tocimxml(doc, self.value),
                                     self.class_origin,
                                     self.propagated,
-                                    self.qualifiers.values.collect { |q| q.tocimxml})
+                                    self.qualifiers.values.collect { |q| q.tocimxml(doc)})
             end
         end
     end
@@ -574,19 +574,19 @@ module WBEM
             return self.keybindings.to_a()
         end
         
-        def tocimxml
+        def tocimxml(doc)
             # Generate an XML representation of the instance classname and
             # keybindings.
             
             if (self.keybindings.kind_of?(String))
                 # Class with single key string property
-                instancename_xml = INSTANCENAME.new(self.classname,
+                instancename_xml = INSTANCENAME.new(doc, self.classname,
                                                     KEYVALUE.new(self.keybindings, "string"))
 
             elsif (self.keybindings.kind_of?(Integer))
             # Class with single key numeric property
-                instancename_xml =  INSTANCENAME.new(self.classname,
-                                                     KEYVALUE.new(self.keybindings.to_s, "numeric"))
+                instancename_xml =  INSTANCENAME.new(doc, self.classname,
+                                                     KEYVALUE.new(doc, self.keybindings.to_s, "numeric"))
 
             elsif (self.keybindings.kind_of?(NocaseHash))
             # Dictionary of keybindings
@@ -595,7 +595,7 @@ module WBEM
                     # Keybindings can be integers, booleans, strings or
                     # value references.                
                     if (kb[1].methods.include?("tocimxml"))
-                        kbs << KEYBINDING.new(kb[0], VALUE_REFERENCE.new(kb[1].tocimxml()))
+                        kbs << KEYBINDING.new(doc, kb[0], VALUE_REFERENCE.new(doc, kb[1].tocimxml(doc)))
                         next
                     end
                     
@@ -609,39 +609,39 @@ module WBEM
                         else
                             value = "FALSE"
                         end
-                    elsif (kb[1].kind_of?(String )) # unicode?
+                    elsif (kb[1].kind_of?(String)) # unicode?
                         _type = "string"
                         value = kb[1]
                     else
                         raise TypeError, "Invalid keybinding type #{kb[1]}(#{kb[1].class}) for keybinding #{kb[0]}"
                     end
                     
-                    kbs << KEYBINDING.new(kb[0], KEYVALUE.new(value, _type))
+                    kbs << KEYBINDING.new(doc, kb[0], KEYVALUE.new(doc, value, _type))
                     
                 end
-                instancename_xml = INSTANCENAME.new(self.classname, kbs)
+                instancename_xml = INSTANCENAME.new(doc, self.classname, kbs)
 
             else
                 # Value reference
             
-                return instancename_xml = INSTANCENAME.new(self.classname, self.keybindings.nil? ? nil : VALUE_REFERENCE.new(self.keybindings.tocimxml()))
+                return instancename_xml = INSTANCENAME.new(doc, self.classname, self.keybindings.nil? ? nil : VALUE_REFERENCE.new(doc, self.keybindings.tocimxml(doc)))
             end
             # Instance name plus namespace = LOCALINSTANCEPATH
 
             if (self.host.nil? && !self.namespace.nil?)
-                return LOCALINSTANCEPATH.new(
-                    LOCALNAMESPACEPATH.new(
-                        self.namespace.split('/').collect { |ns| NAMESPACE.new(ns)}),
+                return LOCALINSTANCEPATH.new(doc,
+                    LOCALNAMESPACEPATH.new(doc,
+                        self.namespace.split('/').collect { |ns| NAMESPACE.new(doc, ns)}),
                         instancename_xml)
             end
 
             # Instance name plus host and namespace = INSTANCEPATH
             if (!self.host.nil? && !self.namespace.nil?)
-                return INSTANCEPATH.new(
-                    NAMESPACEPATH.new(
-                        HOST.new(self.host),
-                        LOCALNAMESPACEPATH.new(
-                            self.namespace.split('/').collect { |ns| NAMESPACE.new(ns)})),
+                return INSTANCEPATH.new(doc,
+                    NAMESPACEPATH.new(doc,
+                        HOST.new(doc, self.host),
+                        LOCALNAMESPACEPATH.new(doc,
+                            self.namespace.split('/').collect { |ns| NAMESPACE.new(doc, ns)})),
                     instancename_xml)
             end
 
@@ -1032,7 +1032,7 @@ module WBEM
         end
     end
 
-    def WBEM.tocimxml(value, wrap_references = false)
+    def WBEM.tocimxml(doc, value, wrap_references = false)
         #"""Convert an arbitrary object to CIM xml.  Works with cim_obj
         #objects and builtin types."""
         
@@ -1042,20 +1042,20 @@ module WBEM
         if ([CIMType, String, Integer, DateTime, TimeDelta, TrueClass, FalseClass].any? do |item| 
                 value.is_a?(item) 
             end)
-            return VALUE.new(WBEM.atomic_to_cim_xml(value))
+            return VALUE.new(doc, WBEM.atomic_to_cim_xml(value))
         elsif (wrap_references and (value.is_a?(CIMInstanceName) or
                                     value.is_a?(CIMClassName) or 
                                     value.is_a?(CIMLocalClassPath)))
-            return VALUE_REFERENCE.new(WBEM.atomic_to_cim_xml(value))
+            return VALUE_REFERENCE.new(doc, WBEM.atomic_to_cim_xml(value))
         elsif (value.methods.include?("tocimxml"))
-            return value.tocimxml()
+            return value.tocimxml(doc)
         elsif (value.is_a?(Array))
             if (wrap_references and (value[0].is_a?(CIMInstanceName) or  
                                      value[0].is_a?(CIMClassName) or 
                                      value.is_a?(CIMLocalClassPath)))
-                return VALUE_REFARRAY.new(value.collect {|val| WBEM.tocimxml(val, wrap_references)})
+                return VALUE_REFARRAY.new(doc, value.collect {|val| WBEM.tocimxml(val, wrap_references)})
             else
-                return VALUE_ARRAY.new(value.collect {|val| WBEM.tocimxml(val, wrap_references)})
+                return VALUE_ARRAY.new(doc, value.collect {|val| WBEM.tocimxml(doc, val, wrap_references)})
             end
         elsif (value.nil?)
             return value

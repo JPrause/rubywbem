@@ -156,6 +156,8 @@ module WBEM
             return 'datetime'
         elsif (obj.is_a?(Array))
             return WBEM.cimtype(obj[0])
+		elsif obj.nil?
+			return 'nil'
         else
             raise TypeError, "Invalid CIM type for #{obj} (#{obj.class})"
         end

@@ -44,16 +44,12 @@
 #"""
 
 require "rubygems"
-require "libxml"
+require "nokogiri"
 
 module WBEM
 
-    class CIMElement <  LibXML::XML::Node
+    class CIMElement <  Nokogiri::XML::Node
             #"""A base class that has a few bonus helper methods."""
-
-        def initialize(arg)
-            super(arg)
-        end
 
         def setName(name)
             #"""Set the NAME attribute of the element."""
@@ -114,8 +110,11 @@ module WBEM
         #    DTDVERSION CDATA #REQUIRED>
         #"""
 
-        def initialize(data, cim_version, dtd_version)
-            super("CIM")
+        def self.new(doc, data, cim_version, dtd_version)
+            super("CIM", doc, data, cim_version, dtd_version)
+		end
+		
+		def initialize(nName, doc, data, cim_version, dtd_version)
             self.add_attribute("CIMVERSION", cim_version)
             self.add_attribute("DTDVERSION", dtd_version)
             self.add_element(data)
@@ -133,8 +132,11 @@ module WBEM
 #     <!ELEMENT DECLARATION  (DECLGROUP|DECLGROUP.WITHNAME|DECLGROUP.WITHPATH)+>
 #     """
 
-        def initialize(data)
-            super("DECLARATION")
+        def self.new(doc, data)
+            super("DECLARATION", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -151,8 +153,11 @@ module WBEM
 #                           QUALIFIER.DECLARATION*,VALUE.OBJECT*)>
 #     """
 
-        def initialize(data)
-            super("DECLGROUP")
+        def self.new(doc, data)
+            super("DECLGROUP", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -169,8 +174,11 @@ module WBEM
 #                                    QUALIFIER.DECLARATION*,VALUE.NAMEDOBJECT*)>
 #     """
 
-        def initialize(data)
-            super("DECLGROUP.WITHNAME")
+        def self.new(doc, data)
+            super("DECLGROUP.WITHNAME", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -185,8 +193,11 @@ module WBEM
 #                                    VALUE.OBJECTWITHLOCALPATH)*>
 #     """
 
-        def initialize(data)
-            super("DECLGROUP.WITHPATH")
+        def self.new(doc, data)
+            super("DECLGROUP.WITHPATH", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -205,9 +216,12 @@ module WBEM
 #          %QualifierFlavor;>
 #     """
 
-        def initialize(name, type, data, is_array = nil,
+        def self.new(doc, name, type, data, is_array = nil,
                        array_size = nil, qualifier_flavor = nil)
-            super("QUALIFIER.DECLARATION")
+            super("QUALIFIER.DECLARATION", doc, name, type, data, is_array, array_size, qualifier_flavor)
+		end
+		
+		def initialize(nName, doc, name, type, data, is_array, array_size, qualifier_flavor)
             self.setName(name)
             self.add_attribute("TYPE", type)
             self.add_optional_attribute(is_array)
@@ -234,10 +248,13 @@ module WBEM
 #          INDICATION   (true|false)      'false'>
 #     """
     
-        def initialize(class_ = false, association = false,
+		def self.new(doc, class_ = false, association = false,
                  reference = false, property = false, method = false,
                  parameter = false, indication = false)
-            super("SCOPE")
+            super("SCOPE", doc, class_, association, reference, property, method, parameter, indication)
+		end
+		
+		def initialize(nName, doc, class_, association, reference, property, method, parameter, indication)
             self.add_attribute("CLASS", class_.to_s)
             self.add_attribute("ASSOCIATION", association.to_s)
             self.add_attribute("REFERENCE", reference.to_s)
@@ -246,7 +263,7 @@ module WBEM
             self.add_attribute("PARAMETER", parameter.to_s)
             self.add_attribute("INDICATION", indication.to_s)
         end
-    end
+	end
 
 # Object value elements
 
@@ -259,8 +276,11 @@ module WBEM
 #     <!ELEMENT VALUE (#PCDATA)>
 #     """
 
-        def initialize(pcdata)
-            super("VALUE")
+        def self.new(doc, pcdata)
+            super("VALUE", doc, pcdata)
+		end
+		
+		def initialize(nName, doc, pcdata)
             self.add_text(pcdata) unless pcdata.nil?
         end
     end
@@ -273,8 +293,11 @@ module WBEM
 #     <!ELEMENT VALUE.ARRAY (VALUE*)>
 #     """
 
-        def initialize(values)
-            super("VALUE.ARRAY")
+        def self.new(doc, values)
+            super("VALUE.ARRAY", doc, values)
+		end
+		
+		def initialize(nName, doc, values)
             self.add_elements(values)
         end
     end
@@ -289,8 +312,11 @@ module WBEM
 #                                INSTANCENAME)>
 #     """
 
-        def initialize(data)
-            super("VALUE.REFERENCE")
+        def self.new(doc, data)
+            super("VALUE.REFERENCE", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -303,8 +329,11 @@ module WBEM
 #     <!ELEMENT VALUE.REFARRAY (VALUE.REFERENCE*)>
 #     """
     
-        def initialize(data)
-            super("VALUE.REFARRAY")
+        def self.new(doc, data)
+            super("VALUE.REFARRAY", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -317,8 +346,11 @@ module WBEM
 #     <!ELEMENT VALUE.OBJECT (CLASS | INSTANCE)>
 #     """
 
-        def initialize(data)
-            super("VALUE.OBJECT")
+        def self.new(doc, data)
+            super("VALUE.OBJECT", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -331,8 +363,11 @@ module WBEM
 #     <!ELEMENT VALUE.NAMEDINSTANCE (INSTANCENAME, INSTANCE)>
 #     """
 
-        def initialize(instancename, instance)
-            super("VALUE.NAMEDINSTANCE")
+        def self.new(doc, instancename, instance)
+            super("VALUE.NAMEDINSTANCE", doc, instancename, instance)
+		end
+		
+		def initialize(nName, doc, instancename, instance)
             self.add_element(instancename)
             self.add_element(instance)
         end
@@ -346,8 +381,11 @@ module WBEM
 #     <!ELEMENT VALUE.NAMEDOBJECT (CLASS | (INSTANCENAME, INSTANCE))>
 #     """
     
-        def initialize(data)
-            super("VALUE.NAMEDOBJECT")
+        def self.new(doc, data)
+            super("VALUE.NAMEDOBJECT", doc, data)
+		end
+		
+		def initialize(nNmae, doc, data)
             self.add_elements(data)
         end
     end
@@ -363,8 +401,11 @@ module WBEM
 #                                         (LOCALINSTANCEPATH, INSTANCE))>
 #    """
 
-        def initialize(data1, data2)
-            super("VALUE.OBJECTWITHLOCALPATH")
+        def self.new(doc, data1, data2)
+            super("VALUE.OBJECTWITHLOCALPATH", doc, data1, data2)
+		end
+		
+		def initialize(nName, doc, data1, data2)
             self.add_element(data1)
             self.add_element(data2)
         end
@@ -381,8 +422,11 @@ module WBEM
 #                                     (INSTANCEPATH, INSTANCE))>
 #     """
     
-        def initialize(data1, data2)
-            super("VALUE.OBJECTWITHPATH")
+        def self.new(doc, data1, data2)
+            super("VALUE.OBJECTWITHPATH", doc, data1, data2)
+		end
+		
+		def initialize(nName, doc, data1, data2)
             self.add_element(data1)
             self.add_element(data2)
         end
@@ -396,8 +440,8 @@ module WBEM
 #    <!ELEMENT VALUE.NULL EMPTY>
 #    """
 
-        def initialize
-            super("VALUE.NULL")
+        def self.new(doc)
+            super("VALUE.NULL", doc)
         end
     end
 
@@ -411,8 +455,11 @@ module WBEM
 #     <!ELEMENT NAMESPACEPATH (HOST, LOCALNAMESPACEPATH)> 
 #     """
 
-        def initialize(host, localnamespacepath)
-            super("NAMESPACEPATH")
+        def self.new(doc, host, localnamespacepath)
+            super("NAMESPACEPATH", doc, host, localnamespacepath)
+		end
+		
+		def initialize(nName, doc, host, localnamespacepath)
             self.add_element(host)
             self.add_element(localnamespacepath)
         end
@@ -427,8 +474,11 @@ module WBEM
 #     <!ELEMENT LOCALNAMESPACEPATH (NAMESPACE+)> 
 #     """
     
-        def initialize(namespaces)
-            super("LOCALNAMESPACEPATH")
+        def self.new(doc, namespaces)
+            super("LOCALNAMESPACEPATH", doc, namespaces)
+		end
+		
+		def initialize(nName, doc, namespaces)
             self.add_elements(namespaces)
         end
     end
@@ -442,11 +492,14 @@ module WBEM
 #     <!ELEMENT HOST (#PCDATA)> 
 #     """
     
-        def initialize(pcdata)
-            super("HOST")
-                unless pcdata.kind_of?(String) # unicode?
-                    raise TypeError, "value argument must be a string"
-                end
+        def self.new(doc, pcdata)
+            super("HOST", doc, pcdata)
+		end
+		
+		def initialize(nName, doc, pcdata)
+			unless pcdata.kind_of?(String) # unicode?
+			    raise TypeError, "value argument must be a string"
+			end
             self.add_text(pcdata)
         end
     end
@@ -461,8 +514,11 @@ module WBEM
 #         %CIMName;>
 #     """
     
-        def initialize(name)
-            super("NAMESPACE")
+        def self.new(doc, name)
+            super("NAMESPACE", doc, name)
+		end
+		
+		def initialize(nName, doc, name)
             self.setName(name)
         end
     end
@@ -475,8 +531,11 @@ module WBEM
 #     <!ELEMENT CLASSPATH (NAMESPACEPATH, CLASSNAME)>
 #     """
     
-        def initialize(namespacepath, classname)
-            super("CLASSPATH")
+        def self.new(doc, namespacepath, classname)
+            super("CLASSPATH", doc, namespacepath, classname)
+		end
+		
+		def initialize(nName, doc, namespacepath, classname)
             self.add_element(namespacepath)
             self.add_element(classname)
         end
@@ -490,8 +549,11 @@ module WBEM
 #     <!ELEMENT LOCALCLASSPATH (LOCALNAMESPACEPATH, CLASSNAME)>
 #     """
     
-        def initialize(localnamespacepath, classname)
-            super("LOCALCLASSPATH")
+        def self.new(doc, localnamespacepath, classname)
+            super("LOCALCLASSPATH", doc, localnamespacepath, classname)
+		end
+		
+		def initialize(nName, doc, localnamespacepath, classname)
             self.add_element(localnamespacepath)
             self.add_element(classname)
         end
@@ -506,8 +568,11 @@ module WBEM
 #         %CIMName;>
 #     """
     
-        def initialize(classname)
-            super("CLASSNAME")
+        def self.new(doc, classname)
+            super("CLASSNAME", doc, classname)
+		end
+		
+		def initialize(nName, doc, classname)
             self.setName(classname)
         end
     end
@@ -521,8 +586,11 @@ module WBEM
 #     <!ELEMENT INSTANCEPATH (NAMESPACEPATH, INSTANCENAME)>
 #     """
     
-        def initialize(namespacepath, instancename)
-            super("INSTANCEPATH")
+        def self.new(doc, namespacepath, instancename)
+            super("INSTANCEPATH", doc, namespacepath, instancename)
+		end
+		
+		def initialize(nName, doc, namespacepath, instancename)
             self.add_element(namespacepath)
             self.add_element(instancename)
         end
@@ -537,8 +605,11 @@ module WBEM
 #     <!ELEMENT LOCALINSTANCEPATH (LOCALNAMESPACEPATH,INSTANCENAME)>
 #     """
     
-        def initialize(localpath, instancename)
-            super("LOCALINSTANCEPATH")
+        def self.new(doc, localpath, instancename)
+            super("LOCALINSTANCEPATH", doc, localpath, instancename)
+		end
+		
+		def initialize(nName, doc, localpath, instancename)
             self.add_element(localpath)
             self.add_element(instancename)
         end
@@ -567,8 +638,11 @@ module WBEM
 #         %ClassName;>
 #     """
     
-        def initialize(classname, data)
-            super("INSTANCENAME")
+        def self.new(doc, classname, data)
+            super("INSTANCENAME", doc, classname, data)
+		end
+		
+		def initialize(nName, doc, classname, data)
             self.add_attribute("CLASSNAME", classname)
             unless data.nil?
                 self.add_elements(data)
@@ -584,8 +658,11 @@ module WBEM
 #     <!ELEMENT OBJECTPATH (INSTANCEPATH | CLASSPATH)>
 #     """
     
-        def initialize(data)
-            super("OBJECTPATH")
+        def self.new(doc, data)
+            super("OBJECTPATH", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -599,8 +676,11 @@ module WBEM
 #         %CIMName;>
 #     """
     
-        def initialize(name, data)
-            super("KEYBINDING")
+        def self.new(doc, name, data)
+            super("KEYBINDING", doc, name, data)
+		end
+		
+		def initialize(nName, doc, name, data)
             self.setName(name)
             self.add_element(data)
         end
@@ -617,8 +697,11 @@ module WBEM
 #         %CIMType;    #IMPLIED>
 #     """
 
-        def initialize(data, value_type = nil, cim_type = nil)
-            super("KEYVALUE")
+        def self.new(doc, data, value_type = nil, cim_type = nil)
+            super("KEYVALUE", doc, data, value_type, cim_type)
+		end
+		
+		def initialize(nName, doc, data, value_type, cim_type)
             if (value_type.nil?)
                 self.add_attribute("VALUETYPE", "string")        
             else
@@ -644,9 +727,12 @@ module WBEM
 #         %SuperClass;>
 #     """
 
-        def initialize(classname, properties = [], methods = [],
+        def self.new(doc, classname, properties = [], methods = [],
                        qualifiers = [], superclass = nil)
-            super("CLASS")
+            super("CLASS", doc, classname, properties, methods, qualifiers, superclass)
+		end
+		
+		def initialize(nName, doc, classname, properties, methods, qualifiers, superclass)
             self.setName(classname)
             self.add_optional_attribute("SUPERCLASS", superclass)
             self.add_elements(qualifiers)
@@ -665,9 +751,12 @@ module WBEM
 #          %ClassName;
 #           xml:lang   NMTOKEN  #IMPLIED>
 #     """
-        def initialize(classname, properties = [], qualifiers = [],
+        def self.new(doc, classname, properties = [], qualifiers = [],
                        xml_lang = nil)
-            super("INSTANCE")
+            super("INSTANCE", doc, classname, properties, qualifiers, xml_lang)
+		end
+		
+		def initialize(nName, doc, classname, properties, qualifiers, xml_lang)
             self.add_attribute("CLASSNAME", classname)
             self.add_optional_attribute("xml:lang", xml_lang)
             self.add_elements(qualifiers)
@@ -695,10 +784,13 @@ module WBEM
 #         xml:lang  NMTOKEN  #IMPLIED>
 #     """
     
-        def initialize(name, type, data, propagated = nil,
+        def self.new(doc, name, type, data, propagated = nil,
                        overridable = nil, tosubclass = nil, toinstance = nil,
                        translatable = nil, xml_lang = nil)
-            super("QUALIFIER")
+            super("QUALIFIER", doc, name, type, data, propagated, overridable, tosubclass, toinstance, translatable, xml_lang)
+		end
+		
+		def initialize(nName, doc, name, type, data, propagated, overridable, tosubclass, toinstance, translatable, xml_lang)
             self.setName(name)
             self.add_attribute("TYPE", type)
             unless propagated.nil?
@@ -744,9 +836,12 @@ module WBEM
 #         xml:lang  NMTOKEN  #IMPLIED>
 #     """
 
-        def initialize(name, type, value = nil, class_origin = nil,
+        def self.new(doc, name, type, value = nil, class_origin = nil,
                        propagated = nil, qualifiers = [], xml_lang = nil)
-            super("PROPERTY")
+            super("PROPERTY", doc, name, type, value, class_origin, propagated, qualifiers, xml_lang)
+		end
+		
+		def initialize(nName, doc, name, type, value, class_origin, propagated, qualifiers, xml_lang)
             self.setName(name)
             self.add_attribute("TYPE", type)
             self.add_optional_attribute("CLASSORIGIN", class_origin)
@@ -781,11 +876,14 @@ module WBEM
 #         xml:lang  NMTOKEN  #IMPLIED>
 #     """
     
-        def initialize(name, type, value_array = nil, 
+        def self.new(doc, name, type, value_array = nil, 
                        array_size = nil, class_origin = nil, 
                        propagated = nil, qualifiers = [],
                        xml_lang = nil)
-            super("PROPERTY.ARRAY")
+            super("PROPERTY.ARRAY", doc, name, type, value_array, array_size, class_origin, propagated, qualifiers, xml_lang)
+		end
+		
+		def initialize(nName, doc, name, type, value_array, array_size, class_origin, propagated, qualifiers, xml_lang)
             self.setName(name)
             self.add_attribute("TYPE", type)
             self.add_optional_attribute("ARRAYSIZE", array_size)
@@ -815,11 +913,14 @@ module WBEM
 #         %Propagated;>
 #     """
     
-        def initialize(name, value_reference = nil, 
+        def self.new(doc, name, value_reference = nil, 
                        reference_class = nil, class_origin = nil, 
                        propagated = nil, qualifiers = [],
                        xml_lang = nil)
-            super("PROPERTY.REFERENCE")
+            super("PROPERTY.REFERENCE", doc, name, value_reference, reference_class, class_origin, propagated, qualifiers, xml_lang)
+		end
+		
+		def initialize(nName, doc, name, value_reference, reference_class, class_origin, propagated, qualifiers, xml_lang)
             self.setName(name)
             self.add_optional_attribute("REFERENCECLASS", reference_class)
             self.add_optional_attribute("CLASSORIGIN", class_origin)
@@ -849,9 +950,12 @@ module WBEM
 #         %Propagated;>
 #     """
     
-        def initialize(name, parameters = [],
+        def self.new(doc, name, parameters = [],
                        return_type = nil, class_origin = nil, propagated = nil, qualifiers = [])
-            super("METHOD")
+            super("METHOD", doc, name, parameters, return_type, class_origin, propagated, qualifiers)
+		end
+		
+		def initialize(nName, doc, name, parameters, return_type, class_origin, propagated, qualifiers)
             self.setName(name)
             self.add_optional_attribute("TYPE", return_type)
             self.add_optional_attribute("CLASSORIGIN", class_origin)
@@ -875,8 +979,11 @@ module WBEM
 #         %CIMType;      #REQUIRED>
 #     """
     
-        def initialize(name, type, qualifiers = [])
-            super("PARAMETER")
+        def self.new(doc, name, type, qualifiers = [])
+            super("PARAMETER", doc, name, type, qualifiers)
+		end
+		
+		def initialize(nName, doc, name, type, qualifiers)
             self.setName(name)
             self.add_attribute("TYPE", type)
             self.add_elements(qualifiers)
@@ -895,8 +1002,11 @@ module WBEM
 #         %ReferenceClass;>
 #     """
     
-        def initialize(name, reference_class = nil, qualifiers = [])
-            super("PARAMETER.REFERENCE")
+        def self.new(doc, name, reference_class = nil, qualifiers = [])
+            super("PARAMETER.REFERENCE", doc, name, reference_class, qualifiers)
+		end
+		
+		def initialize(nName, doc, name, reference_class, qualifiers)
             self.setName(name)
             self.add_optional_attribute("REFERENCECLASS", reference_class)
             self.add_elements(qualifiers)
@@ -916,8 +1026,11 @@ module WBEM
 #         %ArraySize;>
 #     """
     
-        def initialize(name, type, array_size = nil, qualifiers = [])
-            super("PARAMETER.ARRAY")
+        def self.new(doc, name, type, array_size = nil, qualifiers = [])
+            super("PARAMETER.ARRAY", doc, name, type, array_size, qualifiers)
+		end
+		
+		def initialize(nName, doc, name, type, array_size, qualifiers)
             self.setName(name)
             self.add_attribute("TYPE", type)
             self.add_optional_attribute("ARRAYSIZE", array_size)
@@ -938,9 +1051,12 @@ module WBEM
 #         %ArraySize;>
 #     """
     
-        def initialize(name, reference_class = nil, array_size = nil,
+        def self.new(doc, name, reference_class = nil, array_size = nil,
                        qualifiers = [])
-            super("PARAMETER.REFARRAY")
+            super("PARAMETER.REFARRAY", doc, name, reference_class, array_size, qualifiers)
+		end
+		
+		def initialize(nName, doc, name, reference_class, array_size, qualifiers)
             self.setName(name)
             self.add_optional_attribute("REFERENCECLASS", reference_class)
             self.add_optional_attribute("ARRAYSIZE", array_size)
@@ -1033,8 +1149,11 @@ module WBEM
 # 	PROTOCOLVERSION CDATA #REQUIRED>
 #     """
     
-        def initialize(data, message_id, protocol_version)
-            super("MESSAGE")
+        def self.new(doc, data, message_id, protocol_version)
+            super("MESSAGE", doc, data, message_id, protocol_version)
+		end
+		
+		def initialize(nName, doc, data, message_id, protocol_version)
             self.add_attribute("ID", message_id)
             self.add_attribute("PROTOCOLVERSION", protocol_version)
             self.add_element(data)
@@ -1050,8 +1169,11 @@ module WBEM
 #     <!ELEMENT MULTIREQ (SIMPLEREQ, SIMPLEREQ+)>
 #     """
     
-        def initialize(data)
-            super("MULTIREQ")
+        def self.new(doc, data)
+            super("MULTIREQ", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -1065,8 +1187,11 @@ module WBEM
 #     <!ELEMENT MULTIEXPREQ (SIMPLEEXPREQ, SIMPLEEXPREQ+)>
 #     """
     
-        def initialize(data)
-            super("MULTIEXPREQ")
+        def self.new(doc, data)
+            super("MULTIEXPREQ", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -1080,8 +1205,11 @@ module WBEM
 #     <!ELEMENT SIMPLEREQ (IMETHODCALL | METHODCALL)>
 #     """
     
-        def initialize(data)
-            super("SIMPLEREQ")
+        def self.new(doc, data)
+            super("SIMPLEREQ", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -1094,8 +1222,11 @@ module WBEM
 #     <!ELEMENT SIMPLEEXPREQ (EXPMETHODCALL)>
 #     """
     
-        def initialize(data)
-            super("SIMPLEEXPREQ")
+        def self.new(doc, data)
+            super("SIMPLEEXPREQ", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -1115,9 +1246,12 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, localnamespacepath, iparamvalues = [],
+        def self.new(doc, name, localnamespacepath, iparamvalues = [],
                        responsedestination = nil)
-            super("IMETHODCALL")
+            super("IMETHODCALL", doc, name, localnamespacepath, iparamvalues, responsedestination)
+		end
+		
+		def initialize(nName, doc, name, localnamespacepath, iparamvalues, responsedestination)
             self.setName(name)
             self.add_element(localnamespacepath)        
             self.add_elements(iparamvalues)
@@ -1160,8 +1294,11 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, params = [])
-            super("EXPMETHODCALL")
+        def self.new(doc, name, params = [])
+            super("EXPMETHODCALL", doc, name, params)
+		end
+		
+		def initialize(nName, doc, name, params)
             self.setName(name)
             self.add_elements(params)
         end
@@ -1180,8 +1317,11 @@ module WBEM
 #       %ParamType;    #IMPLIED>
 #     """
     
-        def initialize(name, data = nil, param_type = nil)
-            super("PARAMVALUE")
+        def self.new(doc, name, data = nil, param_type = nil)
+            super("PARAMVALUE", doc, name, data, param_type)
+		end
+		
+		def initialize(nName, doc, name, data, param_type)
             self.setName(name)
             self.add_optional_attribute("PARAMTYPE", param_type)
             self.add_optional_element(data)
@@ -1202,8 +1342,11 @@ module WBEM
 #       %ParamType;    #IMPLIED>
 #     """
     
-        def initialize(name, data = nil, param_type = nil)
-            super("IPARAMVALUE")
+        def self.new(doc, name, data = nil, param_type = nil)
+            super("IPARAMVALUE", doc, name, data, param_type)
+		end
+		
+		def initialize(nName, doc, name, data, param_type)
             self.setName(name)
             self.add_optional_attribute("PARAMTYPE", param_type)
             self.add_optional_element(data)
@@ -1221,8 +1364,11 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, data = nil)
-            super("EXPPARAMVALUE")
+        def self.new(doc, name, data = nil)
+            super("EXPPARAMVALUE", doc, name, data)
+		end
+		
+		def initialize(nName, doc, name, data)
             self.setName(name)
             self.add_optional_element(data)
         end
@@ -1237,8 +1383,11 @@ module WBEM
 #     <!ELEMENT MULTIRSP (SIMPLERSP, SIMPLERSP+)>
 #     """
     
-        def initialize(data)
-            super("MULTIRSP")
+        def self.new(doc, data)
+            super("MULTIRSP", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -1252,8 +1401,11 @@ module WBEM
 #     <!ELEMENT MULTIEXPRSP (SIMPLEEXPRSP, SIMPLEEXPRSP+)>
 #     """
 
-        def initialize(data)
-            super("MULTIEXPRSP")
+        def self.new(doc, data)
+            super("MULTIEXPRSP", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_elements(data)
         end
     end
@@ -1268,8 +1420,11 @@ module WBEM
 #     <!ELEMENT SIMPLERSP (METHODRESPONSE | IMETHODRESPONSE | SIMPLEREQACK)>
 #     """
     
-        def initialize(data)
-            super("SIMPLERSP")
+        def self.new(doc, data)
+            super("SIMPLERSP", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -1283,8 +1438,11 @@ module WBEM
 #     <!ELEMENT SIMPLEEXPRSP (EXPMETHODRESPONSE)>
 #     """
     
-        def initialize(data)
-            super("SIMPLEEXPRSP")
+        def self.new(doc, data)
+            super("SIMPLEEXPRSP", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data)
         end
     end
@@ -1302,8 +1460,11 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, data = nil)
-            super("METHODRESPONSE")
+        def self.new(doc, name, data = nil)
+            super("METHODRESPONSE", doc, name, data)
+		end
+		
+		def initialize(nName, doc, name, data)
             self.setName(name)
             unless data.nil?
                 self.add_elements(data)
@@ -1323,8 +1484,11 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, data = nil)
-            super("EXPMETHODRESPONSE")
+        def self.new(doc, name, data = nil)
+            super("EXPMETHODRESPONSE", doc, name, data)
+		end
+		
+		def initialize(nName, doc, name, data)
             self.setName(name)
             self.add_optional_element(data)
         end
@@ -1342,8 +1506,11 @@ module WBEM
 # 	%CIMName;>
 #     """
     
-        def initialize(name, data = nil)
-            super("IMETHODRESPONSE")
+        def self.new(doc, name, data = nil)
+            super("IMETHODRESPONSE", doc, name, data)
+		end
+		
+		def initialize(nName, doc, name, data)
             self.setName(name)
             self.add_optional_element(data)
         end
@@ -1362,8 +1529,11 @@ module WBEM
 # 	DESCRIPTION CDATA #IMPLIED>
 #     """
     
-        def initialize(code, description = nil, instances = [])
-            super("ERROR")
+        def self.new(doc, code, description = nil, instances = [])
+            super("ERROR", doc, code, description, instances)
+		end
+		
+		def initialize(nName, doc, code, description, instances)
             self.add_attribute("CODE", code)
             self.add_optional_attribute("DESCRIPTION", description)
             self.add_elements(instances)
@@ -1380,8 +1550,11 @@ module WBEM
 #        %ParamType;     #IMPLIED>                           
 #     """
     
-        def initialize(data, param_type = nil)
-            super("RETURNVALUE")
+        def self.new(doc, data, param_type = nil)
+            super("RETURNVALUE", doc, data, param_type)
+		end
+		
+		def initialize(nName, doc, data, param_type)
             self.add_optional_attribute("PARAMTYPE", param_type)
             self.add_element(data)
         end
@@ -1400,8 +1573,11 @@ module WBEM
 #                             INSTANCE* | VALUE.NAMEDINSTANCE*)>
 #     """
     
-        def initialize(data)
-            super("IRETURNVALUE")
+        def self.new(doc, data)
+            super("IRETURNVALUE", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_optional_element(data)
         end
     end
@@ -1414,8 +1590,11 @@ module WBEM
 #     <!ELEMENT RESPONSEDESTINATON (INSTANCE)>
 #     """
 
-        def initialize(data)
-            super("RESPONSEDESTINATON")
+        def self.new(doc, data)
+            super("RESPONSEDESTINATON", doc, data)
+		end
+		
+		def initialize(nName, doc, data)
             self.add_element(data);
         end
     end
@@ -1432,10 +1611,16 @@ module WBEM
 #         INSTANCEID CDATA     #REQUIRED>
 #     """
 
-        def initialize(instanceid, data)
-            super("SIMPLEREQACK")
+        def self.new(doc, instanceid, data)
+            super("SIMPLEREQACK", doc, instanceid, data)
+		end
+		
+		def initialize(nName, doc, instanceid, data)
             self.add_optional_attribute("INSTANCEID", instanceid)
             self.add_optional_element(data)
         end
     end
+
+	class CIMDOC < Nokogiri::XML::Document
+	end
 end
