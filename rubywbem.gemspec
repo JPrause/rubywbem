@@ -46,5 +46,5 @@ direct port of pyWbem (http://pywbem.sourceforge.net).}
   gem.require_paths = ["lib"]
   gem.version       = WBEM::VERSION
 
-  gem.add_dependency('nokogiri', '~>1.5.0')
+  gem.add_dependency('nokogiri', '~>1.5')
 end
